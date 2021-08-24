@@ -1,0 +1,11 @@
+This file acknowledges main codebase authors across successive releases of the tool (in alphabetical order):
+2.0.10	(2020): 	 Giuliano Casale, Yi De Yin, Tianquan Zhang
+2.0.4-9	(2019-2020): Giuliano Casale
+2.0.3	(2019): 	 Giuliano Casale, Lulai Zhu
+2.0.0-2 (2017-2019): Giuliano Casale
+1.0.* 	(2015-2016): Giuliano Casale, Juan Fernando Perez
+0.*.* 	(2013-2015): Giuliano Casale, Juan Fernando Perez
+
+We gracefully acknowledge the following people for their feedbacks and contributions to the debugging of LINE:
+2.0.*: Salvatore Dipietro, Alim Gias, Lulai Zhu
+0.*.*, 1.0.*: Danilo Ardagna, Michele Ciavotta, Daniel Dubois, Rasha Osman
