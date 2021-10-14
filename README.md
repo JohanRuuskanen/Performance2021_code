@@ -11,7 +11,7 @@ The implementation is done in `Julia`, but requires the two following external s
 
 which are supplied in the repository. The requirements are listed below, with the versions used during development and testing
 
-   - `Julia v1.5.0`
+   - `Julia v1.6.1`
    - `MATLAB R2018a` (for LINE)
    - `Java openjdk 11.0.11` (for JMT)
    - `Python 3.6.9` with `matplotlib 3.1.1` (for plotting)
@@ -21,9 +21,10 @@ To run, start the `Julia` REPL in this directory and type
 ```julia
 ] activate .
 ] instantiate
+] precompile
 ```
 
-to install the required dependencies. The files for running the evaluation can then be found in the `manuscript/evaluation` folder, while the examples can be found in any of the `manuscript/example*` folders. They should be runnable out-of-the-box, after changing the `basepath` variable. 
+to install the required julia packages. The files for running the evaluation can then be found in the `manuscript/evaluation` folder, while the examples can be found in any of the `manuscript/example*` folders. They should be runnable out-of-the-box, after changing the `basepath` variable. 
 
 
 
