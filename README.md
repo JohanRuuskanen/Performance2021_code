@@ -1,6 +1,6 @@
 ### Reproducing the examples/evaluation
 
-This code can be used to reproduce the results seen in following paper available [here](https://doi.org/10.1016/j.peva.2021.102231)
+The code in this repository can be used to reproduce the results seen in the following paper available [here](https://doi.org/10.1016/j.peva.2021.102231)
 
 > Johan Ruuskanen, Tommi Berner, Karl-Erik Årzén, Anton Cervin, *Improving the mean-field fluid model of processor sharing queueing networks for dynamic performance models in cloud computing*. Performance Evaluation, Volume 151, 2021
 
