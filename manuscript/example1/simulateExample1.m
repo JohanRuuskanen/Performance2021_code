@@ -2,21 +2,11 @@ function simulateExample1(suffix, logpath, mu, seed, timespan)
     addpath(genpath('../../line'));
     
     disp("Simulating")
-
+    
+    % Create the model
     D = {}; 
     D{1} = Coxian.fitMeanAndSCV(mu, 1.0);
     D{2} = Coxian.fitMeanAndSCV(1.0, 1.0);
-    
-    [model, node, jobclass, P] = genModel(D, logpath, suffix);
-
-    solverjmt = SolverJMT(model, 'seed', seed, 'samples', 1e9, 'timespan', timespan);
-    avgJMT = solverjmt.getAvg();
-    save_data_from_sim(node, jobclass, P, D, avgJMT, logpath, suffix);
-
-end
-    
-
-function [model, node, jobclass, P] = genModel(D, logpath, suffix)
     
     model = Network('model');
 
@@ -40,9 +30,12 @@ function [model, node, jobclass, P] = genModel(D, logpath, suffix)
     ];
 
     model.linkAndLog(P, [0, 1, 0], logpath);
-end
+    
+    % Solve the model using JMT
+    solverjmt = SolverJMT(model, 'seed', seed, 'samples', 1e9, 'timespan', timespan);
+    avgJMT = solverjmt.getAvg();
 
-function save_data_from_sim(node, jobclass, P, D, avgJMT, logpath, suffix)
+    % Export data
     K = {};
     Queues = {};
     Disc = {};
@@ -81,5 +74,4 @@ function save_data_from_sim(node, jobclass, P, D, avgJMT, logpath, suffix)
 
     save([logpath, '/params_', suffix, '.mat'], ...
         'Pa', 'Classes', 'Queues', 'Disc', 'Q0', 'K', 'E', 'avgJMT');
-    
 end

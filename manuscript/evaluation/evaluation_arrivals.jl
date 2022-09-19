@@ -10,6 +10,10 @@ if !(@isdefined matlab_session)
 end
 mxcall(matlab_session, :cd, 1, filepath)
 
+if !isdir(datapath)
+    mkdir(datapath)
+end
+
 ## Parameters
 
 # Suffix to name files with
@@ -54,6 +58,49 @@ p_smooth = Trace.p_opt
 
 Errors = compareResults(Results, Trace)
 printErrors(Errors)
+
+## Transient values for initial experiment
+
+itrs = 250
+ts = [0, 500]
+
+mxcall(matlab_session, :simulateTwoTierModel_transVals, 0, datapath, "1", 
+    simSettings, itrs, ts)
+
+dt = (ts[2] - ts[1]) / 1000
+steps = ts[1]:dt:ts[2]
+qm_sim = getQM("transientVals_1.mat", steps)
+qm_sim = qm_sim[sum.(qm_sim) .> 0]
+
+fluid_min, fluid_smooth, _ = fluidSol(Trace, QN, Params, ts, steps)
+
+AE(x, y) = (x -> isfinite(x) ? x : 0.0).(abs.(x - y))
+AE_min = hcat(AE.(qm_sim[2:end], fluid_min[2:end])...)
+AE_smooth = hcat(AE.(qm_sim[2:end], fluid_smooth[2:end])...)
+
+figure(3)
+clf()
+
+subplot(3, 1, 1)
+plot(steps, mean(qm_sim[2:end]))
+subplot(3, 1, 2)
+plot(steps, mean(AE_min, dims=2), "C0")
+plot(steps, mean(AE_smooth, dims=2), "C1")
+subplot(3, 1, 3)
+plot(steps, maximum(AE_min, dims=2), "C0")
+plot(steps, maximum(AE_smooth, dims=2), "C1")
+
+data = hcat(collect(steps), mean(AE_min, dims=2), mean(AE_smooth, dims=2), 
+    maximum(AE_min, dims=2), maximum(AE_smooth, dims=2))
+
+## Save transient value data
+
+headers = ["t" "AE_min_mean" "AE_smooth_mean" "AE_min_max" "AE_smooth_max"] 
+outputfile = joinpath(datapath, "../evaluation_transVals.csv")
+open(outputfile, "w") do f
+    writedlm(f, headers, ",")
+    writedlm(f, data, ",")
+end
 
 ## Function for repeated evaluations
 

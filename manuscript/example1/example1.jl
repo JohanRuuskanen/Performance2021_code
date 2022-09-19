@@ -9,6 +9,10 @@ if !(@isdefined matlab_session)
     matlab_session = MSession()
 end
 
+if !isdir(datapath)
+    mkdir(datapath)
+end
+
 ## Parameters
 
 # Suffix to name files with
@@ -23,6 +27,10 @@ w = 1000
 # Timespan of LINE sim
 timespan = [0, 500000] 
 
+# Parameters for transient simulation
+itrs = 10
+tend = 10
+
 # Subset 
 CN_subset = ["Class1" "Queue"]
 
@@ -33,6 +41,7 @@ Random.seed!(seed_init)
 foreach(rm, joinpath.(datapath, readdir(datapath)))
 
 mxcall(matlab_session, :cd, 1, filepath)
+
 mxcall(matlab_session, :simulateExample1, 0, suffix, datapath, 
     1/0.6, seed_init, timespan)
 
@@ -76,7 +85,7 @@ function runSim(λ::Float64, seed; p_smooth=[])
     Trace = getTraceData(suffix, QN, Params, printout=true, warn=false)
     tspan = (0.0, maximum(maximum.(Trace.ta)))
     Results = getFluidResults(Trace.p_opt, QN, Params, p_smooth=p_smooth)
-    return Results, Trace
+    return Results, Trace, QN, Params
 end
 
 ## Scale rate of arrivals
@@ -84,11 +93,57 @@ end
 printstyled("\n===== RUNNING ARRIVAL TEST =====\n",bold=true, color=:magenta)
 
 arrivals = 0.05:0.025:0.90
-res_vec = Array{Any, 2}(undef, length(arrivals), 2)
+res_vec = Array{Any, 2}(undef, length(arrivals), 4)
 
 for (k, λ) in enumerate(arrivals)
     printstyled("## Running test $k / $(length(arrivals)) ##\n",bold=true, color=:green)
     res_vec[k, :] .= runSim(λ, seed_init*(k+1), p_smooth=p_smooth)
+end
+
+## Run and plot experiments for transient values
+
+arrivalIdx = [11, 27] # Using values 0.3, 0.7
+itrs = 250
+ts = [
+    [0, 15],
+    [0, 90]
+]
+
+for (i, k) in enumerate(arrivalIdx)
+    mxcall(matlab_session, :simulateExample1_transVals, 0, datapath, "$i",
+        1/arrivals[k], itrs, ts[i])
+end
+
+data = zeros(1001)
+figure(3)
+clf()
+for (i, k) in enumerate(arrivalIdx)
+    
+    dt = (ts[i][2] - ts[i][1]) / 1000
+    steps = ts[i][1]:dt:ts[i][2]
+    qm_sim = getQM("transientVals_$i.mat", steps)
+    fluid_min, fluid_smooth, _ = fluidSol(res_vec[k, 2], res_vec[k, 3], 
+        res_vec[k, 4], ts[i], steps)
+    
+    subplot(length(arrivalIdx), 1, i)
+    plot(steps, qm_sim[1])
+    plot(steps, fluid_min[1])
+    plot(steps, fluid_smooth[1])
+    plot(ts[i], (res_vec[k, 2].qm ).* ones(2), "k--")
+
+    data = hcat(data, collect(steps), qm_sim..., fluid_min..., fluid_smooth...)
+end
+data = data[:, 2:end]
+
+## Save transient value data
+
+headers = permutedims(vcat([["t_$i", "dataq1_$i", "fminq1_$i", "fsmoothq1_$i"] 
+    for i = 1:length(arrivalIdx)]...))
+
+outputfile = joinpath(datapath, "../example1_data_trans.csv")
+open(outputfile, "w") do f
+    writedlm(f, headers, ",")
+    writedlm(f, data, ",")
 end
 
 ## Plot results
@@ -108,7 +163,7 @@ tra_smooth = hcat([ [fzero(t -> y(t) - 0.95, 1.0, order=0) for y in x]
 tra_opt = hcat([ [fzero(t -> y(t) - 0.95, 1.0, order=0) for y in x] 
                 for x in getfield.(res_vec[:, 1], :rt_cdf_opt)]...)
 
-figure(3)
+figure(4)
 clf()
 subplot(3, 1, 1)
 plot(arrivals, qm_data', label="data")

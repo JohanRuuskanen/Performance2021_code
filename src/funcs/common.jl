@@ -257,7 +257,7 @@ function getQueueLengthAt(q::Array{Float64, 2}, t::AbstractArray{T, 1}) where T 
 
     k = 2
     for i = 1:length(t)
-        while t_sort[i] > q[k, 1]
+        while t_sort[i] >= q[k, 1]
             k += 1
             if k > size(q, 1)
                 q_t_sort[i:end] .= q[end, 2]
@@ -267,11 +267,8 @@ function getQueueLengthAt(q::Array{Float64, 2}, t::AbstractArray{T, 1}) where T 
         q_t_sort[i] = q[k-1, 2]
     end
 
-    q_d =  re_sort(q_t_sort, idx_s)
-
-    @assert all(q_d[:, 1] .>= 0)
-    @assert all(q_d[:, 2] .>= 0)
-    @assert all(diff(q_d[:, 1]) .>= 0)
+    q_d = re_sort(q_t_sort, idx_s)
+    @assert all(q_d .>= 0)
     
     return q_d
 end

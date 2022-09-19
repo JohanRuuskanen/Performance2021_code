@@ -76,6 +76,28 @@ function getFluidResults(p_opt::Array{Float64, 1}, QN::QueueNetworkStruct, Param
         sol_opt, qf_opt, qm_opt, ps_opt, p_opt, rt_cdf_opt, rt_cdf_CN_opt)
 end
 
+function fluidSol(Trace, QN, Params, ts, steps)
+    alg = lsoda()
+    x0 = QN.A*QN.X0
+
+    prob_min = ODEProblem(dx_fluid!, x0, float(ts), (QN, Params))
+    prob_smooth = ODEProblem(dx_fluid_smooth!, x0, float(ts), (QN, Params, p_smooth))
+    prob_opt = ODEProblem(dx_fluid_smooth!, x0, float(ts), (QN, Params, Trace.p_opt))
+
+    # Extract the fluid solutions
+    sol_min = solve(prob_min, alg, saveat=steps, reltol=1e-8, abstol=1e-8)
+    sol_smooth = solve(prob_smooth, saveat=steps, alg, reltol=1e-8, abstol=1e-8)
+    sol_opt = solve(prob_opt, alg, saveat=steps, reltol=1e-8, abstol=1e-8)
+
+    qf_min = [sum(hcat(sol_min.u...)[Params.N .== i, :], dims=1)[:] for i in 1:sum(Params.C)]
+    qf_smooth = [sum(hcat(sol_smooth.u...)[Params.N .== i, :], dims=1)[:] for i in 1:sum(Params.C)]
+    qf_opt = [sum(hcat(sol_opt.u...)[Params.N .== i, :], dims=1)[:] for i in 1:sum(Params.C)]
+
+    return qf_min, qf_smooth, qf_opt
+
+end
+
+
 function getFluidMatrices(ph::Array{EMpht.PhaseType, 1}, S::Array{Int64,1})
     Φ = blockdiag(sparse.((x->x.T).(ph))...)
     A = blockdiag(sparse.(reshape.((x->x.π).(ph), S, 1))...)

@@ -1,3 +1,5 @@
+using PyPlot
+
 using CSV
 using Dates
 using DataFrames
@@ -14,7 +16,6 @@ using DelimitedFiles
 
 using Random
 using StatsBase
-using PyPlot
 using Distributions
 
 using DifferentialEquations

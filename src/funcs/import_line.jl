@@ -74,6 +74,37 @@ function extractParameters(suffix::String, subCN::Array{String, 2})
     return QN, Params     
 end
 
+function getQM(logfile, steps)
+    matfile = matopen(joinpath(datapath, logfile))
+
+    tv = read(matfile, "t")[:]
+    qv = read(matfile, "q")[:]
+
+    qsim = Matrix{Matrix{Float64}}(undef, size(tv, 1), size(qv[1], 2))
+    for i = 1:size(qsim, 1)
+        for j = 1:size(qsim, 2)
+            if typeof(tv[i]) == Float64
+                qsim[i, j] = [0.0 0.0]
+            else
+                qsim[i, j] = hcat(tv[i], qv[i][:, j])
+            end
+        end
+    end
+
+    qsteps = Matrix{Vector{Float64}}(undef, size(qsim))
+    for (i, q) in enumerate(qsim)
+        if size(q, 1) < 2
+            qsteps[i] = q[1, 2] .* zeros(size(steps))
+        else
+            qsteps[i] = getQueueLengthAt(q, steps)
+        end
+    end
+    #@assert all(all.([sum(qsteps[i, :]) .== sum(qsteps[1, :]) 
+    #    for i = 1:size(qsteps, 1)]))
+
+    return [mean(hcat(qsteps[:, i]...), dims=2)[:] for i=1:size(qsteps, 2)]
+end
+
 function extractData(suffix::String, Params::ParameterStruct; 
     T::Int64=0, printout=true, warn=true, get_alljobs=true)
     

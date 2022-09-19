@@ -8,17 +8,6 @@ function simulateExample2(suffix, logpath, mu, seed, timespan)
     D{2} = Coxian.fitMeanAndSCV(0.5, 0.5);
     D{3} = Coxian.fitMeanAndSCV(1.0, 10.0);
     
-    [model, node, jobclass, P] = genModel(D, logpath, suffix);
-
-    solverjmt = SolverJMT(model, 'seed', seed, 'samples', 1e9, 'timespan', timespan);
-    avgJMT = solverjmt.getAvg();
-    save_data_from_sim(node, jobclass, P, D, avgJMT, logpath, suffix);
-
-end
-    
-
-function [model, node, jobclass, P] = genModel(D, logpath, suffix)
-    
     model = Network('model');
 
     node{1} = Delay(model, ['Delay1_', suffix]); 
@@ -44,9 +33,11 @@ function [model, node, jobclass, P] = genModel(D, logpath, suffix)
     ];
 
     model.linkAndLog(P, ones(size(node)), logpath);
-end
 
-function save_data_from_sim(node, jobclass, P, D, avgJMT, logpath, suffix)
+    
+    solverjmt = SolverJMT(model, 'seed', seed, 'samples', 1e9, 'timespan', timespan);
+    avgJMT = solverjmt.getAvg();
+   
     K = {};
     Queues = {};
     Disc = {};

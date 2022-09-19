@@ -10,6 +10,10 @@ if !(@isdefined matlab_session)
 end
 mxcall(matlab_session, :cd, 1, filepath)
 
+if !isdir(datapath)
+    mkdir(datapath)
+end
+
 ## Parameters
 
 # Suffix to name files with
